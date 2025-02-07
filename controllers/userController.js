@@ -143,7 +143,6 @@ exports.updateUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Handle Profile Picture Upload
     let profilePictureUrl = user.profilePicture;
     if (req.file) {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
