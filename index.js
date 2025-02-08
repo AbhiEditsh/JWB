@@ -6,6 +6,12 @@ const productRoutes = require('./routes/productRoutes');
 const reviewRoutes = require('./routes/reviewsRoutes');
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const adminPaymentRoutes = require("./routes/adminPaymentRoutes");
+const adminOrderRoutes = require("./routes/adminOrderRoutes");
+const adminCategoryRoutes = require("./routes/adminCategoryRoutes");
+
 const app = express();
 
 // Connect to database
@@ -20,6 +26,12 @@ app.use('/api/product', productRoutes);
 app.use('/api/review', reviewRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/payment", paymentRoutes);
+//Admin Payment Route
+app.use("/api/admin", adminPaymentRoutes);
+app.use("/api/admin", adminOrderRoutes);
+app.use("/api/admin", adminCategoryRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
