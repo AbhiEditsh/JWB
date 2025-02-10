@@ -2,6 +2,8 @@ const User = require("../model/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary");
+const sendEmail = require("../config/nodemailer");
+require("dotenv").config();
 // Register User
 exports.registerUser = async (req, res) => {
   const { username, email, password } = req.body;
@@ -75,13 +77,13 @@ exports.logoutUser = async (req, res) => {
 };
 
 exports.updateRole = async (req, res) => {
-  const { userId } = req.user;  // Authenticated user's ID
-  const { role } = req.body;   // New role
+  const { userId } = req.user; // Authenticated user's ID
+  const { role } = req.body; // New role
 
   try {
     const user = await User.findByIdAndUpdate(
-      userId, 
-      { role }, 
+      userId,
+      { role },
       { new: true } // Return updated user
     );
 
@@ -117,20 +119,21 @@ exports.getUserProfile = async (req, res) => {
 // Get All Users (Admin)
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: 'user' }).select("-password -refreshToken"); 
+    const users = await User.find({ role: "user" }).select(
+      "-password -refreshToken"
+    );
 
-    res.status(200).json({ 
-      message: "Users fetched successfully", 
-      users 
+    res.status(200).json({
+      message: "Users fetched successfully",
+      users,
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: "Server error", 
-      error: error.message 
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
     });
   }
 };
-
 
 // Update User
 exports.updateUser = async (req, res) => {
@@ -218,5 +221,58 @@ exports.refreshToken = async (req, res) => {
     res.status(200).json({ token: newToken, refreshToken: newRefreshToken });
   } catch (error) {
     res.status(401).json({ message: "Invalid refresh token" });
+  }
+};
+// Generate a 6-digit OTP
+const generateOTP = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const otp = generateOTP();
+    user.otp = otp;
+    user.otpExpires = Date.now() + 15 * 60 * 1000; // 15 mins expiry
+    await user.save();
+
+    // Send OTP Email
+    const emailContent = `<h2>Password Reset OTP</h2>
+      <p>Your OTP for password reset is: <b>${otp}</b></p>
+      <p>This OTP is valid for 15 minutes.</p>`;
+
+    await sendEmail(user.email, "Password Reset OTP", "", emailContent);
+
+    res.status(200).json({ message: "OTP sent to your email" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    const user = await User.findOne({
+      email,
+      otp,
+      otpExpires: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid OTP or expired OTP" });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.otp = null;
+    user.otpExpires = null;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };

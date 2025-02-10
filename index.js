@@ -11,7 +11,6 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const adminPaymentRoutes = require("./routes/adminPaymentRoutes");
 const adminOrderRoutes = require("./routes/adminOrderRoutes");
 const adminCategoryRoutes = require("./routes/adminCategoryRoutes");
-
 const app = express();
 
 // Connect to database

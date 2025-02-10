@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema(
     profilePicture: { type: String },
     bio: { type: String },
     profession: { type: String },
+    otp: { type: String, default: null },
+    otpExpires: { type: Date, default: null },
   },
   { timestamps: true }
 );
