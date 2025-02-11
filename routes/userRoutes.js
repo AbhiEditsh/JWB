@@ -14,8 +14,8 @@ UserRouter.post("/forgot-password", userController.forgotPassword);
 UserRouter.post("/reset-password", userController.resetPassword);
 // Protected Routes (User Access)
 UserRouter.get('/profile', authMiddleware.authenticateToken, userController.getUserProfile);
-UserRouter.put('/:id', authMiddleware.authenticateToken, userController.updateRole);
-UserRouter.put("/update", authMiddleware.authenticateToken, upload.single("profilePicture"), userController.updateUser);
+// UserRouter.put('/:id', authMiddleware.authenticateToken, userController.updateRole);
+UserRouter.put("/update-user", authMiddleware.authenticateToken, upload.single("profilePicture"), userController.updateUser);
 UserRouter.delete('/delete/:id', authMiddleware.authenticateToken, userController.deleteUser);
 UserRouter.post('/logout', authMiddleware.authenticateToken, userController.logoutUser);
 

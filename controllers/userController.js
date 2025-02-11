@@ -40,7 +40,7 @@ exports.loginUser = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "3d",
     });
     const refreshToken = jwt.sign(
       { userId: user._id },
@@ -51,7 +51,9 @@ exports.loginUser = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    res.status(200).json({ message: "Login successful", token, refreshToken });
+    res
+      .status(200)
+      .json({ message: "Login successful", token, refreshToken, user });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -76,29 +78,24 @@ exports.logoutUser = async (req, res) => {
   }
 };
 
-exports.updateRole = async (req, res) => {
-  const { userId } = req.user; // Authenticated user's ID
-  const { role } = req.body; // New role
+// exports.updateRole = async (req, res) => {
+//   const { userId } = req.user;
+//   const { role } = req.body;
+//   try {
+//     const user = await User.findByIdAndUpdate(userId, { role }, { new: true });
 
-  try {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { role },
-      { new: true } // Return updated user
-    );
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({
-      message: "User role updated successfully!",
-      user,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+//     res.status(200).json({
+//       message: "User roles updated successfully!",
+//       user,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 
 // Get User Profile
 exports.getUserProfile = async (req, res) => {
@@ -135,10 +132,9 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Update User
 exports.updateUser = async (req, res) => {
   const { userId } = req.user;
-  const { username, email, password, bio, profession } = req.body;
+  const { username, email, password, bio, profession, address, profilePicture } = req.body;
 
   try {
     let user = await User.findById(userId);
@@ -146,32 +142,51 @@ exports.updateUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    let profilePictureUrl = user.profilePicture;
-    if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "user_profiles",
-      });
-      profilePictureUrl = uploadResult.secure_url;
+    console.log("Received profilePicture:", profilePicture); // Debugging
+
+    // If a new profile picture is provided from the frontend
+    if (profilePicture) {
+      user.profilePicture = profilePicture;
     }
 
-    if (username) user.username = username;
-    if (email) user.email = email;
-    if (bio) user.bio = bio;
-    if (profession) user.profession = profession;
+    // Update user fields dynamically
+    user.username = username || user.username;
+    user.email = email || user.email;
+    user.bio = bio || user.bio;
+    user.profession = profession || user.profession;
+
+    // Hash new password if provided
     if (password) {
       user.password = await bcrypt.hash(password, 10);
     }
-    if (req.file) {
-      user.profilePicture = profilePictureUrl;
+
+    // Update address if provided
+    if (address) {
+      user.address = {
+        street: address.street || user.address.street,
+        city: address.city || user.address.city,
+        state: address.state || user.address.state,
+        postalCode: address.postalCode || user.address.postalCode,
+        country: address.country || user.address.country,
+      };
     }
 
+    // Save updated user
     await user.save();
 
-    res.status(200).json({ message: "User updated successfully", user });
+    // Remove sensitive data before sending response
+    const updatedUser = user.toObject();
+    delete updatedUser.password;
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user: updatedUser,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Delete User
 exports.deleteUser = async (req, res) => {

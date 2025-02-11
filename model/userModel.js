@@ -11,6 +11,13 @@ const userSchema = new mongoose.Schema(
     profession: { type: String },
     otp: { type: String, default: null },
     otpExpires: { type: Date, default: null },
+    address: { 
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      postalCode: { type: String },
+      country: { type: String },
+    },
   },
   { timestamps: true }
 );
