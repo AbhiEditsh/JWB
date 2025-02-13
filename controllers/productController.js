@@ -2,19 +2,21 @@ const Product = require("../model/productModel");
 const Reviews = require("../model/reviewModel");
 const { cloudinary } = require("../config/cloudinary");
 const fs = require("fs");
+const Category = require("../model/CategoryModel");
 
-// **Create Product (Admin)**
 exports.createProduct = async (req, res) => {
   try {
     const {
       name,
       category,
+      Available,
       description,
       price,
       oldPrice,
       rating,
       author,
-      stock,
+      gender,
+      sku,
     } = req.body;
 
     let productPictureUrl = "";
@@ -30,12 +32,14 @@ exports.createProduct = async (req, res) => {
       ProductImage: productPictureUrl,
       name,
       category,
+      Available,
       description,
       price,
       oldPrice,
       rating,
       author,
-      stock,
+      gender,
+      sku,
     });
 
     const savedProduct = await newProduct.save();
@@ -66,6 +70,7 @@ exports.getProducts = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit))
       .populate("author", "email")
+      .populate("category", "name")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ products, totalPage, totalProducts });
@@ -77,10 +82,9 @@ exports.getProducts = async (req, res) => {
 // **Get Product By ID (User)**
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate(
-      "author",
-      "email"
-    );
+    const product = await Product.findById(req.params.id)
+      .populate("author", "email")
+      .populate("category", "name");
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     const reviews = await Reviews.find({ productId: product._id }).populate(
@@ -123,12 +127,10 @@ exports.updateProduct = async (req, res) => {
       { ...req.body },
       { new: true }
     );
-    res
-      .status(200)
-      .json({
-        message: "Product updated successfully",
-        product: updatedProduct,
-      });
+    res.status(200).json({
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -184,15 +186,24 @@ exports.getRelatedProducts = async (req, res) => {
 exports.getProductsByCategory = async (req, res) => {
   try {
     const category = req.params.category;
-    if (!category)
+    if (!category) {
       return res.status(400).json({ message: "Category is required" });
+    }
 
-    const products = await Product.find(
-      category.toLowerCase() !== "all" ? { category } : {}
-    ).sort({ createdAt: -1 });
-    res
-      .status(200)
-      .json({ category, products, totalProducts: products.length });
+    // Find category object first
+    const categoryObject = await Category.findOne({ name: category });
+    if (!categoryObject && category.toLowerCase() !== "all") {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    const filter = category.toLowerCase() !== "all" ? { category: categoryObject._id } : {};
+
+    const products = await Product.find(filter)
+      .sort({ createdAt: -1 })
+      .populate("author", "email")
+      .populate("category", "name");
+
+    res.status(200).json({ category, products, totalProducts: products.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -141,26 +141,16 @@ exports.updateUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    console.log("Received profilePicture:", profilePicture); // Debugging
-
-    // If a new profile picture is provided from the frontend
     if (profilePicture) {
       user.profilePicture = profilePicture;
     }
-
-    // Update user fields dynamically
     user.username = username || user.username;
     user.email = email || user.email;
     user.bio = bio || user.bio;
     user.profession = profession || user.profession;
-
-    // Hash new password if provided
     if (password) {
       user.password = await bcrypt.hash(password, 10);
     }
-
-    // Update address if provided
     if (address) {
       user.address = {
         street: address.street || user.address.street,
@@ -170,11 +160,8 @@ exports.updateUser = async (req, res) => {
         country: address.country || user.address.country,
       };
     }
-
-    // Save updated user
     await user.save();
-
-    // Remove sensitive data before sending response
+y
     const updatedUser = user.toObject();
     delete updatedUser.password;
 
