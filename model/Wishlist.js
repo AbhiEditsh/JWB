@@ -14,6 +14,7 @@ const wishlistSchema = new mongoose.Schema(
           ref: "Product",
           required: true,
         },
+        liked: { type: Boolean, default: false }, 
       },
     ],
   },
