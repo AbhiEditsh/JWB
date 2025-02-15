@@ -61,23 +61,22 @@ exports.ReviewShow = async (req, res) => {
   }
 };
 
-exports.SingleReviews = async (req, res) => {
-  const { userId } = req.params;
-  if (!userId) {
-    return res.status(400).send({
-      message: "userId is required",
-    });
+exports.getReviewsByUserAndProduct = async (req, res) => {
+  const { userId, productId } = req.query;
+  
+  if (!userId || !productId) {
+      return res.status(400).send({ message: "userId and productId are required" });
   }
+
   try {
-    const reviews = await Review.find({ userId }).sort({ createdAt: -1 });
-    if (reviews.length === 0) {
-      return res.status(404).send({ message: "No reviews found" });
-    }
-    res.status(200).send({
-      message: "Reviews found",
-      reviews,
-    });
+      const reviews = await Review.find({ userId, productId }).sort({ createdAt: -1 });
+
+      if (reviews.length === 0) {
+          return res.status(404).send({ message: "No reviews found for this user and product" });
+      }
+
+      res.status(200).send({ message: "Reviews found", reviews });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+      res.status(500).json({ message: "Server error", error: error.message });
   }
 };

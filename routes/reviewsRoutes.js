@@ -5,6 +5,6 @@ const ReviewRouter = express.Router();
 
 ReviewRouter.post("/create", reviewController.ReviewCreate);
 ReviewRouter.get("/show", reviewController.ReviewShow);
-ReviewRouter.get("/user/:userId", reviewController.SingleReviews);
+ReviewRouter.get("/user", reviewController.getReviewsByUserAndProduct);
 
 module.exports = ReviewRouter;
