@@ -196,15 +196,52 @@ exports.getProductsByCategory = async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    const filter = category.toLowerCase() !== "all" ? { category: categoryObject._id } : {};
+    const filter =
+      category.toLowerCase() !== "all" ? { category: categoryObject._id } : {};
 
     const products = await Product.find(filter)
       .sort({ createdAt: -1 })
       .populate("author", "email")
       .populate("category", "name");
 
-    res.status(200).json({ category, products, totalProducts: products.length });
+    res
+      .status(200)
+      .json({ category, products, totalProducts: products.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+exports.searchProducts = async (req, res) => {
+  console.log(req); 
+  try {
+    const { query } = req.query;
+    if (!query || query.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Query parameter is required and cannot be empty.",
+      });
+    }
+    
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } }, 
+      ],
+    }).populate('category').exec(); 
+
+    if (products.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No products found matching the search criteria.",
+      });
+    }
+
+    res.status(200).json({ success: true, products });
+  } catch (error) {
+    console.error("Error in searchProducts:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+

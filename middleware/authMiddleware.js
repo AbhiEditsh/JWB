@@ -28,3 +28,5 @@ exports.authorizeAdmin = async (req, res, next) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+

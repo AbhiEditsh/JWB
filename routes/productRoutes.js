@@ -4,7 +4,7 @@ const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const { authenticateToken, authorizeAdmin } = require("../middleware/authMiddleware");
 
-const ProductRouter = express.Router();
+const   ProductRouter = express.Router();
 
 // **Admin Routes**
 ProductRouter.post("/admin/create", authenticateToken, authorizeAdmin, upload.single("ProductImage"), productController.createProduct);
@@ -16,5 +16,6 @@ ProductRouter.get("/", productController.getProducts);
 ProductRouter.get("/:id", productController.getProductById);
 ProductRouter.get("/related/:id", productController.getRelatedProducts);
 ProductRouter.get("/category/:category", productController.getProductsByCategory);
-
+ProductRouter.get("/search", productController.searchProducts);
 module.exports = ProductRouter;
+  

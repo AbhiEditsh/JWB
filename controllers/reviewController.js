@@ -56,7 +56,10 @@ exports.ReviewShowByProductId = async (req, res) => {
   const { productId } = req.params;
 
   try {
-    const productReviews = await Review.find({ productId });
+    const productReviews = await Review.find({ productId }).populate(
+      "userId",
+      "username"
+    );
 
     res.status(200).json({
       message: "Product reviews fetched successfully",
@@ -68,20 +71,12 @@ exports.ReviewShowByProductId = async (req, res) => {
 };
 
 exports.getReviewsByUserAndProduct = async (req, res) => {
-  const { userId, productId } = req.body;
+  const { userId, productId } = req.query;
 
   if (!userId || !productId) {
     return res
       .status(400)
       .send({ message: "userId and productId are required" });
-  }
-
-  if (req.user.id !== userId) {
-    return res
-      .status(403)
-      .send({
-        message: "Access denied. You can only access your own reviews.",
-      });
   }
 
   try {
@@ -93,6 +88,33 @@ exports.getReviewsByUserAndProduct = async (req, res) => {
       return res
         .status(404)
         .send({ message: "No reviews found for this user and product" });
+    }
+
+    res.status(200).send({ message: "Reviews found", reviews });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+exports.getReviewsByUser = async (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).send({ message: "userId is required" });
+  }
+
+  try {
+    const reviews = await Review.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'productId', 
+        select: 'name ProductImage', 
+      });
+
+    if (reviews.length === 0) {
+      return res.status(404).send({ message: "No reviews found for this user" });
     }
 
     res.status(200).send({ message: "Reviews found", reviews });

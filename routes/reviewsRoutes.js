@@ -6,6 +6,10 @@ const ReviewRouter = express.Router();
 
 ReviewRouter.post("/create", reviewController.ReviewCreate);
 ReviewRouter.get("/product/:productId", reviewController.ReviewShowByProductId);
-ReviewRouter.get("//product/user/reviews", authenticateToken,reviewController.getReviewsByUserAndProduct);
+ReviewRouter.get(
+  "/product/user/reviews",
+  reviewController.getReviewsByUserAndProduct
+);
+ReviewRouter.get('/user',authenticateToken,reviewController.getReviewsByUser);
 
 module.exports = ReviewRouter;
