@@ -214,8 +214,8 @@ exports.getProductsByCategory = async (req, res) => {
 
 
 exports.searchProducts = async (req, res) => {
-  console.log(req); 
   try {
+  
     const { query } = req.query;
     if (!query || query.trim() === "") {
       return res.status(400).json({
@@ -241,7 +241,8 @@ exports.searchProducts = async (req, res) => {
     res.status(200).json({ success: true, products });
   } catch (error) {
     console.error("Error in searchProducts:", error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 

@@ -12,10 +12,12 @@ ProductRouter.put("/admin/update/:id", authenticateToken, authorizeAdmin, upload
 ProductRouter.delete("/admin/delete/:id", authenticateToken, authorizeAdmin, productController.deleteProduct);
 
 // **User Routes**
+ProductRouter.get("/search", productController.searchProducts);
 ProductRouter.get("/", productController.getProducts);
 ProductRouter.get("/:id", productController.getProductById);
 ProductRouter.get("/related/:id", productController.getRelatedProducts);
 ProductRouter.get("/category/:category", productController.getProductsByCategory);
-ProductRouter.get("/search", productController.searchProducts);
+
+
 module.exports = ProductRouter;
   

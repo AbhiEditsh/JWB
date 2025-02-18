@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary");
 const sendEmail = require("../config/nodemailer");
+const generateToken = require("../middleware/generateToken");
 require("dotenv").config();
 // Register User
 exports.registerUser = async (req, res) => {
@@ -38,10 +39,11 @@ exports.loginUser = async (req, res) => {
     if (!isPasswordMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
+    const token = generateToken(user);
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
-    });
+    // const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    //   expiresIn: "3d",
+    // });
     const refreshToken = jwt.sign(
       { userId: user._id },
       process.env.JWT_REFRESH_SECRET,

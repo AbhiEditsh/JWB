@@ -5,7 +5,7 @@ const { authenticateToken } = require("../middleware/authMiddleware");
 const OrderRouter = express.Router();
 
 OrderRouter.post("/create", authenticateToken, createOrder);
-OrderRouter.get("/user", authenticateToken, getUserOrders);
+OrderRouter.get("/user-order", authenticateToken, getUserOrders);
 OrderRouter.get("/:id", authenticateToken, getOrderById);
 
 
