@@ -1,10 +1,26 @@
 const Order = require("../model/orderModel");
 const Product = require("../model/productModel");
+//user api
+
 const createOrder = async (req, res) => {
   try {
-    const { userId, items, amount, address, paymentMethod } = req.body;
+    const {
+      userId,
+      items,
+      amount,
+      billingAddress,
+      shippingAddress,
+      paymentMethod,
+    } = req.body;
 
-    if (!userId || !items || !amount || !address || !paymentMethod) {
+    if (
+      !userId ||
+      !items ||
+      !amount ||
+      !billingAddress ||
+      !shippingAddress ||
+      !paymentMethod
+    ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -12,13 +28,17 @@ const createOrder = async (req, res) => {
       userId,
       items,
       amount,
-      address,
+      billingAddress,
+      shippingAddress,
       paymentMethod,
       paymentStatus: "Pending",
     });
 
     const newOrder = await order.save();
-    res.status(201).json(newOrder);
+    res.status(201).json({
+      message: "Order created successfully",
+      newOrder,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -30,48 +50,53 @@ const getUserOrders = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ message: "User not authenticated" });
     }
+
     const orders = await Order.find({ userId }).sort({ createdAt: -1 });
     if (!orders.length) {
       return res.status(404).json({ message: "No orders found for this user" });
     }
+
     const populatedOrders = await Promise.all(
       orders.map(async (order) => {
         const populatedItems = await Promise.all(
           order.items.map(async (item) => {
-            console.log(item.productId);
             const product = await Product.findById(item.productId);
-            console.log(product);
-            
             if (product) {
-              item.productDetails = {
-                name: product.name,
-                price: product.price,
-                description: product.description,
-                ProductImage: product.ProductImage,  
-                sku: product.sku,
-                Available: product.Available,
-                gender: product.gender,
-                oldPrice: product.oldPrice,
-                rating: product.rating,
+              return {
+                ...item.toObject(),
+                productDetails: {
+                  name: product.name,
+                  price: product.price,
+                  description: product.description,
+                  productImage: product.ProductImage,
+                  sku: product.sku,
+                  available: product.Available,
+                  gender: product.gender,
+                  oldPrice: product.oldPrice,
+                  rating: product.rating,
+                },
               };
             } else {
-              item.productDetails = null;
+              return {
+                ...item.toObject(),
+                productDetails: null,
+              };
             }
-            return item;
           })
         );
-        order.items = populatedItems;
-        return order;
+        return {
+          ...order.toObject(),
+          items: populatedItems,
+        };
       })
     );
+
     res.status(200).json({ success: true, orders: populatedOrders });
   } catch (error) {
     console.error("Error fetching user orders:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-
-
 
 const getOrderById = async (req, res) => {
   try {
@@ -89,7 +114,26 @@ const getOrderById = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+const getOrdersByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
 
+    const orders = await Order.find({ userId }).populate(
+      "userId",
+      "name email"
+    );
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "No orders found for this user" });
+    }
+
+    res.status(200).json(orders);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+//admin api
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -153,6 +197,7 @@ module.exports = {
   createOrder,
   getUserOrders,
   getOrderById,
+  getOrdersByUserId,
   getAllOrders,
   getOrderDetails,
   updateOrderStatus,

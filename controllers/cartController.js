@@ -15,7 +15,7 @@ exports.addToCart = async (req, res) => {
       );
 
       if (itemIndex > -1) {
-        cart.items[itemIndex].quantity = quantity; // Update quantity directly
+        cart.items[itemIndex].quantity = quantity; 
       } else {
         cart.items.push({ productId, quantity });
       }
@@ -27,7 +27,7 @@ exports.addToCart = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+           
 // Remove a Product from Cart
 exports.removeFromCart = async (req, res) => {
   try {

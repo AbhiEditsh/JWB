@@ -109,9 +109,18 @@ exports.getUserProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ message: "User profile accessed", user });
+    res.status(200).json({
+      message: "User profile accessed",
+      success: true,
+      user,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error in getUserProfile function:", error);
+    res.status(500).json({
+      message: "Server error",
+      success: false,
+      error: error.message,
+    });
   }
 };
 
@@ -136,7 +145,15 @@ exports.getAllUsers = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   const { userId } = req.user;
-  const { username, email, password, bio, profession, address, profilePicture } = req.body;
+  const {
+    username,
+    email,
+    password,
+    bio,
+    profession,
+    address,
+    profilePicture,
+  } = req.body;
 
   try {
     let user = await User.findById(userId);
@@ -163,7 +180,7 @@ exports.updateUser = async (req, res) => {
       };
     }
     await user.save();
-y
+    y;
     const updatedUser = user.toObject();
     delete updatedUser.password;
 
@@ -175,7 +192,6 @@ y
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 // Delete User
 exports.deleteUser = async (req, res) => {

@@ -1,29 +1,31 @@
 const jwt = require("jsonwebtoken");
-const User = require("../model/userModel"); // Ensure the correct path
+const User = require("../model/userModel");
 
 exports.authenticateToken = async (req, res, next) => {
   try {
-    const authHeader = req.header("Authorization");
-    if (!authHeader) {
-      return res.status(401).json({ message: "Access denied. No token provided." });
-    }
-    const token = authHeader.split(" ")[1];
+    const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
-      return res.status(401).json({ message: "Access denied. No token provided." });
+      return res.status(401).json({ message: "Unauthorized: No token provided", success: false });
     }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded.id) {
-      return res.status(401).json({ message: "Invalid token. No user ID found." });
-    }
-    const user = await User.findById(decoded.id).select("-password");
-    req.user = user; 
-    next();
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ message: "Token expired or invalid", success: false });
+      }
+
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found", success: false });
+      }
+
+      req.user = { userId: user._id };
+      next();
+    });
   } catch (error) {
-    console.error("Token verification error:", error);
-    return res.status(403).json({ message: "Invalid or expired token" });
+    console.error("Error in authenticateToken middleware:", error);
+    res.status(500).json({ message: "Server error", success: false });
   }
 };
-
 exports.authorizeAdmin = async (req, res, next) => {
   try {
     if (req.user.role === "admin") {
@@ -36,5 +38,33 @@ exports.authorizeAdmin = async (req, res, next) => {
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+exports.UserAuthenticateToken = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized: No token provided", success: false });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ message: "Token expired or invalid", success: false });
+      }
+
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found", success: false });
+      }
+
+      req.user = { _id: user._id, ...user._doc };
+      next();
+    });
+  } catch (error) {
+    console.error("Error in authenticateToken middleware:", error);
+    res.status(500).json({ message: "Server error", success: false });
   }
 };
