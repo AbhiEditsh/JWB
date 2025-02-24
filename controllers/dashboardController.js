@@ -2,8 +2,7 @@ const Product = require("../model/productModel");
 const Category = require("../model/CategoryModel");
 const Order = require("../model/orderModel");
 const User = require("../model/userModel");
-
-// 🟢 Get Admin Dashboard Statistics
+//GET DASHBOARD
 exports.getDashboardStats = async (req, res) => {
   try {
     const totalProducts = await Product.countDocuments();
@@ -18,8 +17,8 @@ exports.getDashboardStats = async (req, res) => {
       totalOrders,
       totalUsers,
       totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
-    });
-  } catch (error) {
+      });
+    } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

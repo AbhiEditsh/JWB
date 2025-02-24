@@ -4,6 +4,7 @@ const { cloudinary } = require("../config/cloudinary");
 const fs = require("fs");
 const Category = require("../model/CategoryModel");
 
+//CREATE PRODUCT
 exports.createProduct = async (req, res) => {
   try {
     const {
@@ -49,7 +50,7 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// **Get All Products (User)**
+// GE ALL PRODUCT FROM USER
 exports.getProducts = async (req, res) => {
   try {
     const { category, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
@@ -79,7 +80,7 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// **Get Product By ID (User)**
+// GET PRODUCT BY ID -USER
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -97,7 +98,7 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// **Update Product (Admin)**
+// UPDATE PRODUCT-ADMIN
 exports.updateProduct = async (req, res) => {
   try {
     const productId = req.params.id;
@@ -136,7 +137,7 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// **Delete Product (Admin)**
+// DELETE PRODUCT-ADMIN
 exports.deleteProduct = async (req, res) => {
   try {
     const productId = req.params.id;
@@ -158,7 +159,7 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// **Get Related Products (User)**
+// GET RELETED PRODUCT-USER
 exports.getRelatedProducts = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -182,7 +183,7 @@ exports.getRelatedProducts = async (req, res) => {
   }
 };
 
-// **Get Products By Category (User)**
+// GET PRODUCT BY CATEGORY-USER
 exports.getProductsByCategory = async (req, res) => {
   try {
     const category = req.params.category;
@@ -212,7 +213,7 @@ exports.getProductsByCategory = async (req, res) => {
   }
 };
 
-
+//GET PRODUCT SEARCH-USER
 exports.searchProducts = async (req, res) => {
   try {
   

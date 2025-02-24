@@ -2,6 +2,7 @@ const Order = require("../model/orderModel");
 const Product = require("../model/productModel");
 //user api
 
+//CREATE ORDER
 const createOrder = async (req, res) => {
   try {
     const {
@@ -43,7 +44,7 @@ const createOrder = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-
+//GET  USER ALL ORDER
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -97,7 +98,7 @@ const getUserOrders = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-
+//GET ORDER BY ID
 const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate(
@@ -114,6 +115,7 @@ const getOrderById = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+//GET ORDER USER BY ID
 const getOrdersByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -134,6 +136,7 @@ const getOrdersByUserId = async (req, res) => {
 };
 
 //admin api
+//GET ALL  ORDER
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -150,7 +153,7 @@ const getAllOrders = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-
+//GET ORDER
 const getOrderDetails = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate(
@@ -168,7 +171,7 @@ const getOrderDetails = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-
+//UPDATE ORDER STATUS
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;

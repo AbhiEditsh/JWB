@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../model/userModel");
 
+//ADMIN MIDDLEWARE
 exports.authenticateToken = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
@@ -26,6 +27,7 @@ exports.authenticateToken = async (req, res, next) => {
     res.status(500).json({ message: "Server error", success: false });
   }
 };
+//ADMIN AUTHORIZATION
 exports.authorizeAdmin = async (req, res, next) => {
   try {
     if (req.user.role === "admin") {
@@ -42,7 +44,7 @@ exports.authorizeAdmin = async (req, res, next) => {
 };
 
 
-
+  //USER MIDDLEWARE
 exports.UserAuthenticateToken = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
@@ -61,6 +63,8 @@ exports.UserAuthenticateToken = async (req, res, next) => {
       }
 
       req.user = { _id: user._id, ...user._doc };
+
+      
       next();
     });
   } catch (error) {

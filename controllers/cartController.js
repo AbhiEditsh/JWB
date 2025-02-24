@@ -1,6 +1,6 @@
 const Cart = require("../model/Cart");
 
-// Add or Update Product in Cart
+// ADD TO CART
 exports.addToCart = async (req, res) => {
   try {
     const { userId, productId, quantity } = req.body;
@@ -28,7 +28,7 @@ exports.addToCart = async (req, res) => {
   }
 };
            
-// Remove a Product from Cart
+// REMOVE A PRODUCT CART
 exports.removeFromCart = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -46,7 +46,7 @@ exports.removeFromCart = async (req, res) => {
   }
 };
 
-// Get User Cart with Total Price Calculation
+// GET CART
 exports.getCart = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -69,5 +69,28 @@ exports.getCart = async (req, res) => {
     res.status(200).json({ cart, totalItems, totalPrice });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+//CLEAR CART 
+exports.clearCart = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    console.log(userId);
+    
+
+    const updatedCart = await Cart.findOneAndUpdate(
+      { userId },
+      { items: [], totalPrice: 0 },
+      { new: true } 
+    );
+
+    if (!updatedCart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    res.status(200).json({ message: "Cart cleared successfully", cart: updatedCart });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to clear cart", error });
   }
 };

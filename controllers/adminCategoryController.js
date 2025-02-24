@@ -1,5 +1,7 @@
 const Category = require("../model/CategoryModel");
 
+
+//CREATE CATEGORY
 const createCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -27,6 +29,7 @@ const createCategory = async (req, res) => {
   }
 };
 
+//GET ALL CATEGORY
 const getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find().sort({ createdAt: -1 });
@@ -41,6 +44,7 @@ const getAllCategories = async (req, res) => {
   }
 };
 
+//UPDATE CATEGORY
 const updateCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -62,6 +66,7 @@ const updateCategory = async (req, res) => {
   }
 };
 
+//DELETE CATEGORY
 const deleteCategory = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);

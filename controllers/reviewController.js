@@ -1,6 +1,7 @@
 const Product = require("../model/productModel");
 const Review = require("../model/reviewModel");
 
+//REVIEW CREATE-USER
 exports.ReviewCreate = async (req, res) => {
   try {
     const { comment, rating, userId, productId } = req.body;
@@ -52,6 +53,8 @@ exports.ReviewCreate = async (req, res) => {
   }
 };
 
+
+//REVIEWS SHOW PRODUCT ID
 exports.ReviewShowByProductId = async (req, res) => {
   const { productId } = req.params;
 
@@ -70,6 +73,7 @@ exports.ReviewShowByProductId = async (req, res) => {
   }
 };
 
+//GET REVIEWS SPECIFIC USER-USER
 exports.getReviewsByUserAndProduct = async (req, res) => {
   const { userId, productId } = req.query;
 
@@ -97,7 +101,7 @@ exports.getReviewsByUserAndProduct = async (req, res) => {
 };
 
 
-
+//GET REVIEWS USER
 exports.getReviewsByUser = async (req, res) => {
   const { userId } = req.query;
 

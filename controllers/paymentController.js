@@ -8,6 +8,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 //use api
+//USER PAYMENT PROCESS
 const processRazorpayPayment = async (req, res) => {
   try {
     const { amount, currency = "INR" } = req.body;
@@ -32,7 +33,7 @@ const processRazorpayPayment = async (req, res) => {
       .json({ message: "Payment processing failed", error: error.message });
   }
 };
-
+//USER PAYMENT VERIFY
 const verifyPayment = async (req, res) => {
   try {
     const {
@@ -67,7 +68,7 @@ const verifyPayment = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
+//USER PAYMENT CASH ON DELIVERY
 const cashOnDelivery = async (req, res) => {
   try {
     const { userId, amount, address } = req.body;
@@ -86,7 +87,7 @@ const cashOnDelivery = async (req, res) => {
       .json({ message: "COD processing failed", error: error.message });
   }
 };
-
+//WEB HOOK API
 const handleRazorpayWebhook = async (req, res) => {
   try {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET; // Use secret from env
@@ -135,6 +136,7 @@ const handleRazorpayWebhook = async (req, res) => {
   }
 };
 //admin api
+//GET ALL PAYMENT ADMIN
 const getAllPayments = async (req, res) => {
   try {
     const payments = await Order.find().sort({ createdAt: -1 });
@@ -149,6 +151,7 @@ const getAllPayments = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+//GET PAYMENT BY ID ADMIN
 const getPaymentById = async (req, res) => {
   try {
     const payment = await Order.findById(req.params.id);

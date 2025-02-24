@@ -5,7 +5,7 @@ const cloudinary = require("../config/cloudinary");
 const sendEmail = require("../config/nodemailer");
 const generateToken = require("../middleware/generateToken");
 require("dotenv").config();
-// Register User
+// REGISTER -USER
 exports.registerUser = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -25,7 +25,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// Login User
+// LOGIN -USER
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -61,7 +61,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// Logout User
+// LOGOUT-USER
 exports.logoutUser = async (req, res) => {
   const { userId } = req.user;
 
@@ -99,7 +99,7 @@ exports.logoutUser = async (req, res) => {
 //   }
 // };
 
-// Get User Profile
+// GET PROFILE-USER-ADMIN
 exports.getUserProfile = async (req, res) => {
   const { userId } = req.user;
 
@@ -124,7 +124,7 @@ exports.getUserProfile = async (req, res) => {
   }
 };
 
-// Get All Users (Admin)
+// GET ALL USERS-ADMIN
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find({ role: "user" }).select(
@@ -143,6 +143,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+//UPDATE USER-USER
 exports.updateUser = async (req, res) => {
   const { userId } = req.user;
   const {
@@ -193,7 +194,7 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Delete User
+// DELETE  USER-ADMIN
 exports.deleteUser = async (req, res) => {
   const { userId } = req.user;
 
@@ -209,7 +210,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// Refresh Token
+// Refresh Token-USER
 exports.refreshToken = async (req, res) => {
   const { refreshToken } = req.body;
 
@@ -246,6 +247,7 @@ exports.refreshToken = async (req, res) => {
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
+//FORGOT PASSWORD -USER
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -272,7 +274,7 @@ exports.forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
+//RESET PASSWORD-USER
 exports.resetPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body;
   try {
