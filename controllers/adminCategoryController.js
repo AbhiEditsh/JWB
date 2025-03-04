@@ -1,7 +1,6 @@
 const Category = require("../model/CategoryModel");
 
-
-//CREATE CATEGORY
+// CREATE CATEGORY
 const createCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -18,18 +17,16 @@ const createCategory = async (req, res) => {
     const newCategory = new Category({ name, description });
     await newCategory.save();
 
-    res
-      .status(201)
-      .json({
-        message: "Category created successfully",
-        category: newCategory,
-      });
+    res.status(201).json({
+      message: "Category created successfully",
+      category: newCategory,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-//GET ALL CATEGORY
+// GET ALL CATEGORIES
 const getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find().sort({ createdAt: -1 });
@@ -44,7 +41,7 @@ const getAllCategories = async (req, res) => {
   }
 };
 
-//UPDATE CATEGORY
+// UPDATE CATEGORY
 const updateCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -58,15 +55,16 @@ const updateCategory = async (req, res) => {
     category.description = description || category.description;
     await category.save();
 
-    res
-      .status(200)
-      .json({ message: "Category updated successfully", category });
+    res.status(200).json({
+      message: "Category updated successfully",
+      category,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-//DELETE CATEGORY
+// DELETE CATEGORY
 const deleteCategory = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
@@ -82,9 +80,36 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+// MULTI-DELETE CATEGORIES
+
+// MULTI-DELETE CATEGORIES
+const deleteMultipleCategories = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "Invalid or missing category IDs" });
+    }
+    const result = await Category.deleteMany({ _id: { $in: ids } });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "No categories found to delete" });
+    }
+    res.status(200).json({
+      message: `${result.deletedCount} categories deleted successfully`,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+module.exports = {
+  deleteMultipleCategories,
+};
+
 module.exports = {
   createCategory,
   getAllCategories,
   updateCategory,
   deleteCategory,
+  deleteMultipleCategories,
 };

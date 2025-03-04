@@ -216,7 +216,6 @@ exports.getProductsByCategory = async (req, res) => {
 //GET PRODUCT SEARCH-USER
 exports.searchProducts = async (req, res) => {
   try {
-  
     const { query } = req.query;
     if (!query || query.trim() === "") {
       return res.status(400).json({
@@ -224,13 +223,15 @@ exports.searchProducts = async (req, res) => {
         message: "Query parameter is required and cannot be empty.",
       });
     }
-    
+
     const products = await Product.find({
       $or: [
         { name: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } }, 
+        { description: { $regex: query, $options: "i" } },
       ],
-    }).populate('category').exec(); 
+    })
+      .populate("category")
+      .exec();
 
     if (products.length === 0) {
       return res.status(404).json({
@@ -242,8 +243,6 @@ exports.searchProducts = async (req, res) => {
     res.status(200).json({ success: true, products });
   } catch (error) {
     console.error("Error in searchProducts:", error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-

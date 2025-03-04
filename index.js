@@ -22,7 +22,7 @@ app.use(express.json());
 
 // CORS Configuration
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin:"http://localhost:3031",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
