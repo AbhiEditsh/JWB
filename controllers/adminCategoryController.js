@@ -76,50 +76,41 @@ const getSingleCategory = async (req, res) => {
   }
 };
 
-
 // UPDATE CATEGORY
 const updateCategory = async (req, res) => {
   try {
-    const { name, description } = req.body;
     const categoryId = req.params.id;
-
     const category = await Category.findById(categoryId);
-
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
-
-    // Update name and description if provided
-    category.name = name || category.name;
-    category.description = description || category.description;
-
-    // Handle ProductImage update
     if (req.file) {
-      // Upload new image to Cloudinary
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
         folder: "product_profiles",
       });
-      const newProductImageUrl = uploadResult.secure_url;
-
-      // Delete old image from Cloudinary if it exists
-      if (category.ProductImage) {
-        const publicId = category.ProductImage.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(`product_profiles/${publicId}`);
-      }
-
-      // Update the ProductImage field
-      category.ProductImage = newProductImageUrl;
-
-      // Delete the temporary file
+      req.body.ProductImage = uploadResult.secure_url;
       fs.unlinkSync(req.file.path);
-    }
 
-    // Save the updated category
-    await category.save();
+      if (existingProduct.ProductImage) {
+        const oldImagePublicId = existingProduct.ProductImage.split("/")
+          .pop()
+          .split(".")[0];
+        await cloudinary.uploader.destroy(
+          `product_profiles/${oldImagePublicId}`
+        );
+      }
+    }
+    const updatedCategory = await Category.findByIdAndUpdate(
+      categoryId,
+      { ...req.body },
+      { new: true }
+    );
+    console.log(updatedCategory);
+    
 
     res.status(200).json({
       message: "Category updated successfully",
-      category,
+      updatedCategory,
     });
   } catch (error) {
     console.error("Error updating category:", error);
@@ -153,7 +144,9 @@ const deleteMultipleCategories = async (req, res) => {
     const { ids } = req.body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ message: "Invalid or missing category IDs" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing category IDs" });
     }
 
     // Find all categories by IDs

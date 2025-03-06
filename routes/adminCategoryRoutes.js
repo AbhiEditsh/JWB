@@ -24,3 +24,5 @@ CategoryRouter.delete("/categories/delete/:id", deleteCategory);
 CategoryRouter.delete("/categories/multi-delete", deleteMultipleCategories);
 
 module.exports = CategoryRouter;
+
+
