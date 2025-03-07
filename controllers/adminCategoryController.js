@@ -5,16 +5,7 @@ const fs = require("fs");
 // CREATE CATEGORY
 const createCategory = async (req, res) => {
   try {
-    const { name, description } = req.body;
-
-    let productPictureUrl = "";
-    if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "product_profiles",
-      });
-      productPictureUrl = uploadResult.secure_url;
-      fs.unlinkSync(req.file.path); // Delete the temporary file after upload
-    }
+    const { name, description, ProductImage } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: "Category name is required" });
@@ -25,11 +16,20 @@ const createCategory = async (req, res) => {
       return res.status(400).json({ message: "Category already exists" });
     }
 
+    let productPictureUrl = "";
+    if (ProductImage) {
+      const uploadResult = await cloudinary.uploader.upload(ProductImage, {
+        folder: "product_profiles",
+      });
+      productPictureUrl = uploadResult.secure_url;
+    }
+
     const newCategory = new Category({
       name,
       description,
       ProductImage: productPictureUrl,
     });
+
     await newCategory.save();
 
     res.status(201).json({
@@ -41,6 +41,7 @@ const createCategory = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 
 // GET ALL CATEGORIES
 const getAllCategories = async (req, res) => {
@@ -62,7 +63,6 @@ const getSingleCategory = async (req, res) => {
   try {
     const categoryId = req.params.id;
 
-    // Find the category by ID
     const category = await Category.findById(categoryId);
 
     if (!category) {
@@ -120,6 +120,7 @@ const updateCategory = async (req, res) => {
 
 // DELETE CATEGORY
 const deleteCategory = async (req, res) => {
+  console.log(req.params.id);
   try {
     const categoryId = req.params.id;
     const category = await Category.findById(categoryId);

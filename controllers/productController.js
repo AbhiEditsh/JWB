@@ -110,7 +110,6 @@ exports.updateProduct = async (req, res) => {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
         folder: "product_profiles",
       });
-      req.body.ProductImage = uploadResult.secure_url;
       fs.unlinkSync(req.file.path);
 
       if (existingProduct.ProductImage) {
