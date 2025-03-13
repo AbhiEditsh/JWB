@@ -40,5 +40,8 @@ ProductRouter.get(
   "/category/:category",
   productController.getProductsByCategory
 );
+ProductRouter.delete("/delete/:id", productController.deleteProduct);
+ProductRouter.delete("/multi-delete", productController.deleteMultipleProduct);
+
 
 module.exports = ProductRouter;

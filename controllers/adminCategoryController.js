@@ -150,10 +150,8 @@ const deleteMultipleCategories = async (req, res) => {
         .json({ message: "Invalid or missing category IDs" });
     }
 
-    // Find all categories by IDs
     const categories = await Category.find({ _id: { $in: ids } });
 
-    // Delete associated images from Cloudinary
     for (const category of categories) {
       if (category.ProductImage) {
         const publicId = category.ProductImage.split("/").pop().split(".")[0];
@@ -161,7 +159,6 @@ const deleteMultipleCategories = async (req, res) => {
       }
     }
 
-    // Delete the categories from the database
     const result = await Category.deleteMany({ _id: { $in: ids } });
 
     if (result.deletedCount === 0) {

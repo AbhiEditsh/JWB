@@ -19,7 +19,7 @@ exports.authenticateToken = async (req, res, next) => {
         return res.status(404).json({ message: "User not found", success: false });
       }
 
-      req.user = { userId: user._id };
+      req.user = { userId: user._id, role: user.role };
       next();
     });
   } catch (error) {
@@ -27,9 +27,12 @@ exports.authenticateToken = async (req, res, next) => {
     res.status(500).json({ message: "Server error", success: false });
   }
 };
+
 //ADMIN AUTHORIZATION
 exports.authorizeAdmin = async (req, res, next) => {
   try {
+    console.log("User Role:", req.user.role); 
+
     if (req.user.role === "admin") {
       next();
     } else {
@@ -42,6 +45,7 @@ exports.authorizeAdmin = async (req, res, next) => {
       .json({ message: "Server error", error: error.message });
   }
 };
+
 
 
   //USER MIDDLEWARE
