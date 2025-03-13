@@ -63,8 +63,6 @@ exports.getProducts = async (req, res) => {
     }
 
     const products = await Product.find(filter)
-      .skip(skip)
-      .limit(parseInt(limit))
       .populate("author", "email")
       .populate("category", "name _id")
       .sort({ createdAt: -1 });
