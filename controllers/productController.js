@@ -4,7 +4,7 @@ const { cloudinary } = require("../config/cloudinary");
 const fs = require("fs");
 const Category = require("../model/CategoryModel");
 
-//CREATE PRODUCT
+
 exports.createProduct = async (req, res) => {
   try {
     const {
@@ -18,21 +18,18 @@ exports.createProduct = async (req, res) => {
       author,
       gender,
       sku,
+      ProductImage,
     } = req.body;
 
-    let productPictureUrl = "";
-    if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "product_profiles",
-      });
-      productPictureUrl = uploadResult.secure_url;
-      fs.unlinkSync(req.file.path);
+    const categoryDoc = await Category.findOne({ name: category });
+    if (!categoryDoc) {
+      return res.status(400).json({ message: "Invalid category name" });
     }
 
     const newProduct = new Product({
-      ProductImage: productPictureUrl,
+      ProductImage,
       name,
-      category,
+      category: categoryDoc._id,
       Available,
       description,
       price,
@@ -44,37 +41,33 @@ exports.createProduct = async (req, res) => {
     });
 
     const savedProduct = await newProduct.save();
-    res.status(201).json(savedProduct);
+    res.status(201).json({
+      message: "Product created successfully",
+      savedProduct,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
-// GE ALL PRODUCT FROM USER
 exports.getProducts = async (req, res) => {
   try {
-    const { category, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
+    const { category } = req.query;
     let filter = {};
 
     if (category && category !== "all") {
-      filter.category = category;
+      const categoryDoc = await Category.findOne({ name: category });
+      if (categoryDoc) {
+        filter.category = categoryDoc._id;
+      }
     }
-    if (minPrice && maxPrice) {
-      filter.price = { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) };
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const totalProducts = await Product.countDocuments(filter);
-    const totalPage = Math.ceil(totalProducts / parseInt(limit));
 
     const products = await Product.find(filter)
-      .skip(skip)
-      .limit(parseInt(limit))
       .populate("author", "email")
-      .populate("category", "name")
+      .populate("category", "name _id")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ products, totalPage, totalProducts });
+    res.status(200).json({ products });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -110,7 +103,6 @@ exports.updateProduct = async (req, res) => {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
         folder: "product_profiles",
       });
-      req.body.ProductImage = uploadResult.secure_url;
       fs.unlinkSync(req.file.path);
 
       if (existingProduct.ProductImage) {
@@ -244,5 +236,61 @@ exports.searchProducts = async (req, res) => {
   } catch (error) {
     console.error("Error in searchProducts:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// DELETE PRODUCTS
+exports.deleteProduct = async (req, res) => {
+  console.log(req.params.id);
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    if (product.ProductImage) {
+      const publicId = product.ProductImage.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(`product_profiles/${publicId}`);
+    }
+    await product.deleteOne();
+    res.status(200).json({ message: "Product deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// MULTI-DELETE PRODUCTS
+exports.deleteMultipleProduct = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing product IDs" });
+    }
+
+    const products = await Product.find({ _id: { $in: ids } });
+
+    for (const product of products) {
+      if (product.ProductImage) {
+        const publicId = product.ProductImage.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`product_profiles/${publicId}`);
+      }
+    }
+
+    const result = await Category.deleteMany({ _id: { $in: ids } });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "No categories found to delete" });
+    }
+
+    res.status(200).json({
+      message: `${result.deletedCount} product deleted successfully`,
+    });
+  } catch (error) {
+    console.error("Error deleting multiple products:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
