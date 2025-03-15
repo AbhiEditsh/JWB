@@ -73,31 +73,44 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// GET PRODUCT BY ID -USER
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate("author", "email")
-      .populate("category", "name");
-    if (!product) return res.status(404).json({ message: "Product not found" });
+      .populate({ path: "author", select: "email" }) 
+      .populate({ path: "category", select: "name" }) 
 
-    const reviews = await Reviews.find({ productId: product._id }).populate(
-      "userId",
-      "email"
-    );
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const reviews = await Reviews.find({ productId: product._id })
+      .populate({ path: "userId", select: "email" });
+
     res.status(200).json({ product, reviews });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+
 // UPDATE PRODUCT-ADMIN
+
 exports.updateProduct = async (req, res) => {
   try {
     const productId = req.params.id;
     const existingProduct = await Product.findById(productId);
-    if (!existingProduct)
+    if (!existingProduct) {
       return res.status(404).json({ message: "Product not found" });
+    }
+    let updateData = { ...req.body };
+
+    if (req.body.category) {
+      const categoryDoc = await Category.findOne({ name: req.body.category });
+      if (!categoryDoc) {
+        return res.status(400).json({ message: "Invalid category name" });
+      }
+      updateData.category = categoryDoc._id;
+    }
 
     if (req.file) {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
@@ -109,17 +122,13 @@ exports.updateProduct = async (req, res) => {
         const oldImagePublicId = existingProduct.ProductImage.split("/")
           .pop()
           .split(".")[0];
-        await cloudinary.uploader.destroy(
-          `product_profiles/${oldImagePublicId}`
-        );
+        await cloudinary.uploader.destroy(`product_profiles/${oldImagePublicId}`);
       }
+      updateData.ProductImage = uploadResult.secure_url;
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      { ...req.body },
-      { new: true }
-    );
+    const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, { new: true });
+
     res.status(200).json({
       message: "Product updated successfully",
       product: updatedProduct,
@@ -128,6 +137,7 @@ exports.updateProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // DELETE PRODUCT-ADMIN
 exports.deleteProduct = async (req, res) => {
@@ -280,7 +290,7 @@ exports.deleteMultipleProduct = async (req, res) => {
       }
     }
 
-    const result = await Category.deleteMany({ _id: { $in: ids } });
+    const result = await Product.deleteMany({ _id: { $in: ids } });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No categories found to delete" });
