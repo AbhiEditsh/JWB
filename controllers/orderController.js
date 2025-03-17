@@ -137,10 +137,31 @@ const getOrdersByUserId = async (req, res) => {
 
 //admin api
 //GET ALL  ORDER
+// const getAllOrders = async (req, res) => {
+//   try {
+//     const orders = await Order.find()
+//       .populate("userId", "username email")
+//       .populate("productId","ProductImage")
+//       .sort({ createdAt: -1 });
+
+//     if (!orders.length) {
+//       return res.status(404).json({ message: "No orders found" });
+//     }
+
+//     res.status(200).json(orders);
+//   } catch (error) {
+//     console.error("Error fetching orders:", error);
+//     res.status(500).json({ message: "Server Error", error: error.message });
+//   }
+// };
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate("userId", "name email")
+      .populate("userId", "username email") // Fetch user details
+      .populate({
+        path: "items.productId", // Assuming products is an array of { productId, quantity }
+        select: "name ProductImage price", // Fetch name, image, and price
+      })
       .sort({ createdAt: -1 });
 
     if (!orders.length) {
@@ -153,12 +174,13 @@ const getAllOrders = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 //GET ORDER
 const getOrderDetails = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate(
       "userId",
-      "name email"
+      "username email"
     );
 
     if (!order) {
