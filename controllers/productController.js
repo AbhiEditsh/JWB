@@ -4,7 +4,6 @@ const { cloudinary } = require("../config/cloudinary");
 const fs = require("fs");
 const Category = require("../model/CategoryModel");
 
-
 exports.createProduct = async (req, res) => {
   try {
     const {
@@ -76,22 +75,23 @@ exports.getProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate({ path: "author", select: "email" }) 
-      .populate({ path: "category", select: "name" }) 
+      .populate({ path: "author", select: "email" })
+      .populate({ path: "category", select: "name" });
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    const reviews = await Reviews.find({ productId: product._id })
-      .populate({ path: "userId", select: "email" });
+    const reviews = await Reviews.find({ productId: product._id }).populate({
+      path: "userId",
+      select: "email",
+    });
 
     res.status(200).json({ product, reviews });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // UPDATE PRODUCT-ADMIN
 
@@ -122,12 +122,18 @@ exports.updateProduct = async (req, res) => {
         const oldImagePublicId = existingProduct.ProductImage.split("/")
           .pop()
           .split(".")[0];
-        await cloudinary.uploader.destroy(`product_profiles/${oldImagePublicId}`);
+        await cloudinary.uploader.destroy(
+          `product_profiles/${oldImagePublicId}`
+        );
       }
       updateData.ProductImage = uploadResult.secure_url;
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, { new: true });
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      updateData,
+      { new: true }
+    );
 
     res.status(200).json({
       message: "Product updated successfully",
@@ -137,7 +143,6 @@ exports.updateProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // DELETE PRODUCT-ADMIN
 exports.deleteProduct = async (req, res) => {

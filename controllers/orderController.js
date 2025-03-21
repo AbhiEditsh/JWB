@@ -154,12 +154,33 @@ const getOrdersByUserId = async (req, res) => {
 //     res.status(500).json({ message: "Server Error", error: error.message });
 //   }
 // };
+// const getAllOrders = async (req, res) => {
+//   try {
+//     const orders = await Order.find()
+//       .populate("userId", "username email") // Fetch user details
+//       .populate({
+//         path: "items.productId", // Assuming products is an array of { productId, quantity }
+//         select: "name ProductImage price", // Fetch name, image, and price
+//       })
+//       .sort({ createdAt: -1 });
+
+//     if (!orders.length) {
+//       return res.status(404).json({ message: "No orders found" });
+//     }
+
+//     res.status(200).json(orders);
+//   } catch (error) {
+//     console.error("Error fetching orders:", error);
+//     res.status(500).json({ message: "Server Error", error: error.message });
+//   }
+// };
+
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate("userId", "username email") // Fetch user details
+      .populate("userId", "username email profilePicture") // Fetch user details
       .populate({
-        path: "items.productId", // Assuming products is an array of { productId, quantity }
+        path: "items.productId", // Assuming items is an array of { productId, quantity }
         select: "name ProductImage price", // Fetch name, image, and price
       })
       .sort({ createdAt: -1 });
@@ -168,7 +189,16 @@ const getAllOrders = async (req, res) => {
       return res.status(404).json({ message: "No orders found" });
     }
 
-    res.status(200).json(orders);
+    // Calculate totalQuantity for each order
+    const ordersWithTotalQuantity = orders.map((order) => {
+      const totalQuantity = order.items.reduce(
+        (sum, item) => sum + (item.quantity || 0),
+        0
+      );
+      return { ...order.toObject(), totalQuantity };
+    });
+
+    res.status(200).json(ordersWithTotalQuantity);
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -178,10 +208,12 @@ const getAllOrders = async (req, res) => {
 //GET ORDER
 const getOrderDetails = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate(
-      "userId",
-      "username email"
-    );
+    const order = await Order.findById(req.params.id)
+      .populate("userId", "username email profilePicture")
+      .populate({
+        path: "items.productId",
+        select: "name price ProductImage sku",
+      });
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -193,6 +225,7 @@ const getOrderDetails = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 //UPDATE ORDER STATUS
 const updateOrderStatus = async (req, res) => {
   try {

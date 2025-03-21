@@ -1,10 +1,12 @@
 const User = require("../model/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const cloudinary = require("../config/cloudinary");
+const { cloudinary } = require("../config/cloudinary");
 const sendEmail = require("../config/nodemailer");
 const generateToken = require("../middleware/generateToken");
 require("dotenv").config();
+const fs = require("fs");
+
 // REGISTER -USER
 exports.registerUser = async (req, res) => {
   const { username, email, password } = req.body;
@@ -145,43 +147,53 @@ exports.getAllUsers = async (req, res) => {
 
 //UPDATE USER-USER
 exports.updateUser = async (req, res) => {
-  const { userId } = req.user;
-  const {
-    username,
-    email,
-    password,
-    bio,
-    profession,
-    address,
-    profilePicture,
-  } = req.body;
-
   try {
+    const { userId } = req.user;
+    const { username, email, password, address, gender, phone } = req.body;
+
+   
+
     let user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (profilePicture) {
-      user.profilePicture = profilePicture;
+
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "product_profiles",
+      });
+      fs.unlinkSync(req.file.path);
+
+      if (user.profilePicture) {
+        const oldImagePublicId = user.profilePicture
+          .split("/")
+          .pop()
+          .split(".")[0];
+        await cloudinary.uploader.destroy(
+          `product_profiles/${oldImagePublicId}`
+        );
+      }
+      user.profilePicture = uploadResult.secure_url;
     }
+
+    // Update user fields
     user.username = username || user.username;
     user.email = email || user.email;
-    user.bio = bio || user.bio;
-    user.profession = profession || user.profession;
+    user.gender = gender || user.gender;
+    user.phone = phone || user.phone;
+    user.profilePicture=user.profilePicture
+
     if (password) {
       user.password = await bcrypt.hash(password, 10);
     }
+
     if (address) {
-      user.address = {
-        street: address.street || user.address.street,
-        city: address.city || user.address.city,
-        state: address.state || user.address.state,
-        postalCode: address.postalCode || user.address.postalCode,
-        country: address.country || user.address.country,
-      };
+      user.address = { ...user.address, ...address };
     }
+
     await user.save();
-    y;
+
+    // Remove password before sending response
     const updatedUser = user.toObject();
     delete updatedUser.password;
 
@@ -190,10 +202,10 @@ exports.updateUser = async (req, res) => {
       user: updatedUser,
     });
   } catch (error) {
+    console.error("Update Error:", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 // DELETE  USER-ADMIN
 exports.deleteUser = async (req, res) => {
   const { userId } = req.user;

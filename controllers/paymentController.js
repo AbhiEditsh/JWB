@@ -126,13 +126,11 @@ const handleRazorpayWebhook = async (req, res) => {
     res.status(200).json({ success: true, message: "Webhook received" });
   } catch (error) {
     console.error("Webhook Error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Webhook processing failed",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Webhook processing failed",
+      error: error.message,
+    });
   }
 };
 //admin api
@@ -154,7 +152,12 @@ const getAllPayments = async (req, res) => {
 //GET PAYMENT BY ID ADMIN
 const getPaymentById = async (req, res) => {
   try {
-    const payment = await Order.findById(req.params.id);
+    const payment = await Order.findById(req.params.id)
+      .populate("userId", "username email profilePicture")
+      .populate({
+        path: "items.productId",
+        select: "name price ProductImage sku",
+      });
 
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" });
@@ -166,6 +169,41 @@ const getPaymentById = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+//UPDATE COD PAYMENT
+const updateCODPayment = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ message: "Order ID is required" });
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.paymentMethod !== "COD") {
+      return res.status(400).json({ message: "Not a COD order" });
+    }
+
+    order.paymentStatus = "Paid";
+    order.status = "Delivered";
+    order.paymentDate = new Date();
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "COD payment updated successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Error updating COD payment:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 module.exports = {
   processRazorpayPayment,
@@ -174,6 +212,5 @@ module.exports = {
   handleRazorpayWebhook,
   getAllPayments,
   getPaymentById,
+  updateCODPayment,
 };
-
-

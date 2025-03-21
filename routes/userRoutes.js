@@ -2,7 +2,8 @@ const express = require('express');
 const UserRouter = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middleware/authMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+const multer = require('multer');
+const upload = multer({ dest: "uploads/" });
 const { getDashboardStats } = require('../controllers/dashboardController');
 
 // Public Routes
@@ -15,7 +16,12 @@ UserRouter.post("/reset-password", userController.resetPassword);
 // Protected Routes (User Access)
 UserRouter.get('/profile', authMiddleware.authenticateToken, userController.getUserProfile);
 // UserRouter.put('/:id', authMiddleware.authenticateToken, userController.updateRole);
-UserRouter.put("/update-user", authMiddleware.authenticateToken, upload.single("profilePicture"), userController.updateUser);
+UserRouter.put(
+    "/update-user",
+    authMiddleware.authenticateToken,
+    upload.single("profilePicture"),
+    userController.updateUser
+  );
 UserRouter.delete('/delete/:id', authMiddleware.authenticateToken, userController.deleteUser);
 UserRouter.post('/logout', authMiddleware.authenticateToken, userController.logoutUser);
 
